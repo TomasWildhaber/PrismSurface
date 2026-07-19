@@ -1,2 +1,14 @@
+#pragma once
+
 #define PRISMSURFACE_VERSION_MAJOR @PrismSurface_VERSION_MAJOR@
 #define PRISMSURFACE_VERSION_MINOR @PrismSurface_VERSION_MINOR@
+
+#cmakedefine USE_SOURCE_HEADERS
+
+#include "PrismSurface.h"
+
+#ifdef USE_SOURCE_HEADERS
+    #define PRISM_SOURCE_API PRISM_API
+#else
+    #define PRISM_SOURCE_API
+#endif
