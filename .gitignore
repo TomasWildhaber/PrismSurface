@@ -1,0 +1,38 @@
+# PrismSurface gitignore config
+ 
+# PrismSurfcae config files
+config
+
+# Build directories
+build
+out
+bin
+lib
+
+# CMake
+_deps
+CMakeCache.txt*
+CMakeFiles
+CMakeScripts
+CMakeDoxyfile.in
+CMakeDoxygenDefaults.cmake
+cmake_install.cmake
+cmake_uninstall.cmake
+
+# Visual Studio
+*.sdf
+*.suo
+*.dir
+*.vcxproj*
+*.sln
+.vs
+CMakeSettings.json
+
+# Makefile
+Makefile
+
+# Ninja
+build.ninja
+rules.ninja
+.ninja_deps
+.ninja_log

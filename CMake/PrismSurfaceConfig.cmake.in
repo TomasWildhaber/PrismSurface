@@ -1,0 +1,12 @@
+@PACKAGE_INIT@
+
+# If PrismSurface ever requires external libraries (like Vulkan, OpenGL, etc.)
+# to be installed on the user's system, you would uncomment and add them here:
+# include(CMakeFindDependencyMacro)
+# find_dependency(Vulkan REQUIRED)
+
+# Include the targets file that CMake generated during the install step
+include("${CMAKE_CURRENT_LIST_DIR}/PrismSurfaceTargets.cmake")
+
+# Verify that all components were found and loaded correctly
+check_required_components(PrismSurface)
