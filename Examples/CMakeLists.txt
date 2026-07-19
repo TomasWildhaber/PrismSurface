@@ -1,17 +1,17 @@
-# PrismSurface windows example cmake
+# PrismSurface examples cmake
 
-set(TARGET_NAME "WindowExample")
+set(TARGET_NAME "Examples")
 
 file (GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.h"
 )
 
 add_executable("${TARGET_NAME}" "${SOURCES}")
 
 target_include_directories("${TARGET_NAME}"
     PRIVATE
-        "${CMAKE_CURRENT_SOURCE_DIR}/src"
+        "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
 target_link_libraries("${TARGET_NAME}"

@@ -12,6 +12,7 @@ option(BUILD_SHARED_LIBS "Build shared libraries, can be overwritten by PRISM_LI
 option(USE_SOURCE_HEADERS "Install source headers, can be useful when using specific platform stuff" OFF)
 option(PRISM_FORCE_ERRORS "Force compiler to treat warnings as errors" ON)
 option(PRISM_BUILD_EXAMPLES "Build the ${PROJECT_NAME} example projects" ON)
+option(PRISM_BUILD_TESTS "Build the ${PROJECT_NAME} test projects" OFF)
 
 # If set to AUTO (default), library type will be determined by BUILD_SHARED_LIBS
 set(PRISM_LIBRARY_TYPE "AUTO" CACHE STRING "Choose the type of ${PROJECT_NAME} library to build (STATIC, SHARED or AUTO)")
@@ -43,7 +44,11 @@ endif()
 add_subdirectory(${PROJECT_NAME})
 
 if (PRISM_BUILD_EXAMPLES)
-    add_subdirectory(Examples/Window)
+    add_subdirectory(Examples)
+endif()
+
+if (PRISM_BUILD_TESTS)
+    add_subdirectory(Tests)
 endif()
 
 include(CMakePackageConfigHelpers)
