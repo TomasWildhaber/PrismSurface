@@ -23,8 +23,8 @@ namespace PrismSurface
 		bool Visible = true;
 		bool Centered = false;
 		bool Resizable = true;
-		bool CustomTitleBar = false;
-		bool CustomFrame = false;
+		bool DefaultTitleBar = true;
+		bool DefaultFrame = true;
 	};
 
 	PRISM_API class Window
@@ -37,7 +37,7 @@ namespace PrismSurface
 		std::string GetTitle() const;
 
 		bool IsResizable() const;
-		bool HasCustomTitleBar() const;
+		bool HasDefaultTitleBar() const;
 
 		bool IsVisible() const;
 		bool IsMaximized() const;
@@ -59,6 +59,8 @@ namespace PrismSurface
 
 		static Window* Create(const WindowProperties& properties);
 	protected:
+		Window(const WindowProperties& properties) : m_Properties(properties) {}
+
 		WindowProperties m_Properties;
 	};
 }

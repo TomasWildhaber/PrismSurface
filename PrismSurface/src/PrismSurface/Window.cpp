@@ -24,9 +24,9 @@ namespace PrismSurface
 		return m_Properties.Resizable;
 	}
 
-	bool Window::HasCustomTitleBar() const
+	bool Window::HasDefaultTitleBar() const
 	{
-		return m_Properties.CustomTitleBar;
+		return m_Properties.DefaultTitleBar;
 	}
 
 	bool Window::IsVisible() const
