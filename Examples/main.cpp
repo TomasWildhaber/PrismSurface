@@ -1,10 +1,17 @@
 #include "PrismSurface/Window.h"
 
+#include <iostream>
+
 bool isRunning = true;
 
-void OnWindowClose()
+void OnEvent(PrismSurface::Event& event)
 {
-	isRunning = false;
+	if (event.GetType() == PrismSurface::EventType::WindowClosed)
+	{
+		isRunning = false;
+	}
+
+	std::cout << event.GetName() << std::endl;
 }
 
 int main(int argc, char** argv)
@@ -14,6 +21,7 @@ int main(int argc, char** argv)
 	properties.Width = 800;
 	properties.Height = 600;
 	properties.Centered = true;
+	properties.EventCallback = OnEvent;
 
 	PrismSurface::Window* window = PrismSurface::Window::Create(properties);
 

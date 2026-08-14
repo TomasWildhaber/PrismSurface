@@ -48,4 +48,9 @@ namespace PrismSurface
 	{
 		return m_Properties.CurrentState == WindowState::Fullscreen;
 	}
+
+	void Window::SetEventCallback(EventCallbackFn callback)
+	{
+		m_Properties.EventCallback = callback;
+	}
 }

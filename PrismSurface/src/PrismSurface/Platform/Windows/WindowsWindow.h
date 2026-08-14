@@ -1,6 +1,8 @@
+#pragma once
+
 #include <windows.h>
 
-#include "PrismSurfaceConfig.h"
+#include "PrismSurface/PrismSurfaceConfig.h"
 #include "PrismSurface/Window.h"
 
 namespace PrismSurface
@@ -27,6 +29,8 @@ namespace PrismSurface
 		HWND GetWindowHandle() const { return m_WindowHandle; }
 		HINSTANCE GetInstanceHandle() const { return m_InstanceHandle; }
 	private:
+		friend LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 		HWND m_WindowHandle;
 		HINSTANCE m_InstanceHandle;
 	};

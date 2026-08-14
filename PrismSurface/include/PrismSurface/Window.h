@@ -1,10 +1,15 @@
+#pragma once
+
 #include <string>
 #include <cstdint>
 
-#include "PrismSurface.h"
+#include "PrismSurface/PrismSurface.h"
+#include "Events.h"
 
 namespace PrismSurface
 {
+	using EventCallbackFn = void(*)(Event&);
+
 	PRISM_API enum class WindowState
 	{
 		Minimized,
@@ -25,6 +30,7 @@ namespace PrismSurface
 		bool Resizable = true;
 		bool DefaultTitleBar = true;
 		bool DefaultFrame = true;
+		EventCallbackFn EventCallback = nullptr;
 	};
 
 	PRISM_API class Window
@@ -40,11 +46,13 @@ namespace PrismSurface
 		bool HasDefaultTitleBar() const;
 
 		bool IsVisible() const;
-		bool IsMaximized() const;
-		bool IsMinimized() const;
+		bool (IsMaximized)() const;
+		bool (IsMinimized)() const;
 		bool IsFullscreen() const;
 
 		virtual const void* GetNativeWindow() const = 0;
+
+		void SetEventCallback(EventCallbackFn callback);
 
 		virtual void Update() = 0;
 

@@ -68,7 +68,7 @@ include(GenerateExportHeader)
 generate_export_header("${PROJECT_NAME}"
     BASE_NAME PRISM
     EXPORT_MACRO_NAME PRISM_API
-    EXPORT_FILE_NAME "${CMAKE_CURRENT_SOURCE_DIR}/config/PrismSurface.h"
+    EXPORT_FILE_NAME "${CMAKE_CURRENT_SOURCE_DIR}/config/${PROJECT_NAME}/${PROJECT_NAME}.h"
 )
 
 install(TARGETS "${PROJECT_NAME}"
