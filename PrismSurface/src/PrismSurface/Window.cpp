@@ -29,6 +29,11 @@ namespace PrismSurface
 		return m_Properties.DefaultTitleBar;
 	}
 
+	bool Window::HasFrame() const
+	{
+		return m_Properties.Frame;
+	}
+
 	bool Window::IsVisible() const
 	{
 		return m_Properties.Visible;

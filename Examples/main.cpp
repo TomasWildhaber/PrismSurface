@@ -11,6 +11,15 @@ void OnEvent(PrismSurface::Event& event)
 		isRunning = false;
 	}
 
+	if (event.GetType() == PrismSurface::EventType::TitlebarHittest)
+	{
+		PrismSurface::TitlebarHittestEvent& hittestEvent = static_cast<PrismSurface::TitlebarHittestEvent&>(event);
+		
+		float titlebarHeight = 30.0f;
+		if (hittestEvent.GetMouseY() < titlebarHeight)
+			hittestEvent.Hittest = true;
+	}
+
 	std::cout << event.GetName() << std::endl;
 }
 
@@ -21,6 +30,9 @@ int main(int argc, char** argv)
 	properties.Width = 800;
 	properties.Height = 600;
 	properties.Centered = true;
+	properties.Resizable = true;
+	properties.DefaultTitleBar = false;
+	properties.Frame = true;
 	properties.EventCallback = OnEvent;
 
 	PrismSurface::Window* window = PrismSurface::Window::Create(properties);

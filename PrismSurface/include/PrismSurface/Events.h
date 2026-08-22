@@ -13,6 +13,7 @@ namespace PrismSurface
 		WindowLostFocus,
 		WindowResized,
 		WindowMoved,
+		TitlebarHittest,
 		KeyPressed,
 		KeyReleased,
 		KeyTyped,
@@ -87,6 +88,23 @@ namespace PrismSurface
 		virtual const char* GetName() const override;
 	private:
 		uint32_t m_X, m_Y;
+	};
+
+	PRISM_API class TitlebarHittestEvent : public Event
+	{
+	public:
+		TitlebarHittestEvent(float mouseX, float mouseY, bool& hittest)
+			: m_MouseX(mouseX), m_MouseY(mouseY), Hittest(hittest) {}
+
+		float GetMouseX() const { return m_MouseX; }
+		float GetMouseY() const { return m_MouseY; }
+
+		virtual EventType GetType() const override;
+		virtual const char* GetName() const override;
+
+		bool& Hittest;
+	private:
+		float m_MouseX, m_MouseY;
 	};
 
 	PRISM_API class KeyPressedEvent : public Event

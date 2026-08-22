@@ -13,7 +13,7 @@ namespace PrismSurface
 		WindowsWindow(const WindowProperties& properties);
 		virtual ~WindowsWindow();
 
-		virtual const void* GetNativeWindow() const;
+		virtual const void* GetNativeHandle() const;
 
 		void Update() override;
 
@@ -26,7 +26,7 @@ namespace PrismSurface
 		void Hide() override;
 		void Close() override;
 
-		HWND GetWindowHandle() const { return m_WindowHandle; }
+		HWND GetHandle() const { return m_WindowHandle; }
 		HINSTANCE GetInstanceHandle() const { return m_InstanceHandle; }
 	private:
 		friend LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);

@@ -29,7 +29,7 @@ namespace PrismSurface
 		bool Centered = false;
 		bool Resizable = true;
 		bool DefaultTitleBar = true;
-		bool DefaultFrame = true;
+		bool Frame = true;
 		EventCallbackFn EventCallback = nullptr;
 	};
 
@@ -43,6 +43,7 @@ namespace PrismSurface
 		std::string GetTitle() const;
 
 		bool IsResizable() const;
+		bool HasFrame() const;
 		bool HasDefaultTitleBar() const;
 
 		bool IsVisible() const;
@@ -50,7 +51,7 @@ namespace PrismSurface
 		bool (IsMinimized)() const;
 		bool IsFullscreen() const;
 
-		virtual const void* GetNativeWindow() const = 0;
+		virtual const void* GetNativeHandle() const = 0;
 
 		void SetEventCallback(EventCallbackFn callback);
 

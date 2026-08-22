@@ -52,6 +52,16 @@ namespace PrismSurface
 		return "WindowMoved";
 	}
 
+	EventType TitlebarHittestEvent::GetType() const
+	{
+		return EventType::TitlebarHittest;
+	}
+
+	const char* TitlebarHittestEvent::GetName() const
+	{
+		return "TitlebarHittest";
+	}
+
 	EventType KeyPressedEvent::GetType() const
 	{
 		return EventType::KeyPressed;
