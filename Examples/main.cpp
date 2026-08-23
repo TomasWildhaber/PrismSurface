@@ -3,6 +3,7 @@
 #include <iostream>
 
 bool isRunning = true;
+uint32_t windowWidth = 800;
 
 void OnEvent(PrismSurface::Event& event)
 {
@@ -11,13 +12,28 @@ void OnEvent(PrismSurface::Event& event)
 		isRunning = false;
 	}
 
+	if (event.GetType() == PrismSurface::EventType::WindowResized)
+	{
+		PrismSurface::WindowResizedEvent& resizedEvent = static_cast<PrismSurface::WindowResizedEvent&>(event);
+		windowWidth = resizedEvent.GetWidth();
+	}
+
 	if (event.GetType() == PrismSurface::EventType::TitlebarHittest)
 	{
 		PrismSurface::TitlebarHittestEvent& hittestEvent = static_cast<PrismSurface::TitlebarHittestEvent&>(event);
 		
 		float titlebarHeight = 30.0f;
 		if (hittestEvent.GetMouseY() < titlebarHeight)
-			hittestEvent.Hittest = true;
+		{
+			if (hittestEvent.GetMouseX() >= windowWidth - 30.0f)
+				hittestEvent.Hittest = PrismSurface::TitlebarHittestEvent::HittestResult::CloseButton;
+			else if (hittestEvent.GetMouseX() >= windowWidth - 60.0f)
+				hittestEvent.Hittest = PrismSurface::TitlebarHittestEvent::HittestResult::MaximizeButton;
+			else if (hittestEvent.GetMouseX() >= windowWidth - 90.0f)
+				hittestEvent.Hittest = PrismSurface::TitlebarHittestEvent::HittestResult::MinimizeButton;
+			else
+				hittestEvent.Hittest = PrismSurface::TitlebarHittestEvent::HittestResult::Titlebar;
+		}
 	}
 
 	std::cout << event.GetName() << std::endl;

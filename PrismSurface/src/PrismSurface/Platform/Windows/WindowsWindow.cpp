@@ -138,14 +138,14 @@ namespace PrismSurface
 					GetClientRect(hwnd, &clientRect);
 
 					enum HitAreas { Left = 1, Top = 2, Right = 4, Bottom = 8 };
-					constexpr int topOffset = 2;
+					constexpr int topExtend = 2;
 
 					int hit = 0;
 					if (cursorPos.x <= clientRect.left)
 						hit |= Left;
 					if (cursorPos.x >= clientRect.right)
 						hit |= Right;
-					if (cursorPos.y <= clientRect.top + topOffset)
+					if (cursorPos.y <= clientRect.top + topExtend)
 						hit |= Top;
 					if (cursorPos.y >= clientRect.bottom)
 						hit |= Bottom;
@@ -162,15 +162,58 @@ namespace PrismSurface
 
 				if (window->m_Properties.EventCallback)
 				{
-					bool titlebarHitttest = false;
+					TitlebarHittestEvent::HittestResult titlebarHitttest =
+						TitlebarHittestEvent::HittestResult::None;
+
 					TitlebarHittestEvent event(static_cast<float>(cursorPos.x), static_cast<float>(cursorPos.y), titlebarHitttest);
 					window->m_Properties.EventCallback(event);
 
-					if (titlebarHitttest)
-						return HTCAPTION;
+					switch (titlebarHitttest)
+					{
+						case PrismSurface::TitlebarHittestEvent::HittestResult::None: 				return HTCLIENT;
+						case PrismSurface::TitlebarHittestEvent::HittestResult::Titlebar:			return HTCAPTION;
+						case PrismSurface::TitlebarHittestEvent::HittestResult::MinimizeButton:		return HTMINBUTTON;
+						case PrismSurface::TitlebarHittestEvent::HittestResult::MaximizeButton:		return HTMAXBUTTON;
+						case PrismSurface::TitlebarHittestEvent::HittestResult::CloseButton:		return HTCLOSE;
+					}
 				}
 
 				return HTCLIENT;
+			}
+
+			case WM_NCLBUTTONDOWN:
+			case WM_NCLBUTTONUP:
+			{
+				WindowsWindow* window = GetWindowFromHandle(hwnd);
+
+				if (!window->HasDefaultTitleBar() && msg == WM_NCLBUTTONUP)
+				{
+					switch (wParam)
+					{
+						case HTMINBUTTON:		ShowWindow(hwnd, SW_MINIMIZE); break;
+						case HTMAXBUTTON:		ShowWindow(hwnd, SW_MAXIMIZE); break;
+						case HTCLOSE:			PostMessage(hwnd, WM_CLOSE, 0, 0); break;
+					}
+
+					return 0;
+				}
+
+				if (!window->HasDefaultTitleBar())
+					return 0;
+
+				break;
+			}
+
+			case WM_NCRBUTTONDOWN:
+			case WM_NCRBUTTONUP:
+			{
+				WindowsWindow* window = GetWindowFromHandle(hwnd);
+				bool isInTitlebar = (wParam == HTCAPTION || wParam == HTSYSMENU || wParam == HTMINBUTTON || wParam == HTMAXBUTTON);
+
+				if (!window->m_Properties.WinMenu && isInTitlebar)
+					return 0;
+
+				break;
 			}
 
 			case WM_SETTINGCHANGE:
@@ -196,6 +239,16 @@ namespace PrismSurface
 
 				if (window && window->GetTheme() == Theme::System)
 					window->SetTheme(Theme::System);
+
+				break;
+			}
+
+			case WM_SYSCOMMAND:
+			{
+				WindowsWindow* window = GetWindowFromHandle(hwnd);
+
+				if ((wParam & 0xFFF0) == SC_KEYMENU && !window->m_Properties.WinMenu)
+					return 0;
 
 				break;
 			}

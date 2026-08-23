@@ -93,7 +93,16 @@ namespace PrismSurface
 	PRISM_API class TitlebarHittestEvent : public Event
 	{
 	public:
-		TitlebarHittestEvent(float mouseX, float mouseY, bool& hittest)
+		enum class HittestResult : uint8_t
+		{
+			None,
+			Titlebar,
+			MinimizeButton,
+			MaximizeButton,
+			CloseButton,
+		};
+
+		TitlebarHittestEvent(float mouseX, float mouseY, HittestResult& hittest)
 			: m_MouseX(mouseX), m_MouseY(mouseY), Hittest(hittest) {}
 
 		float GetMouseX() const { return m_MouseX; }
@@ -102,7 +111,7 @@ namespace PrismSurface
 		virtual EventType GetType() const override;
 		virtual const char* GetName() const override;
 
-		bool& Hittest;
+		HittestResult& Hittest;
 	private:
 		float m_MouseX, m_MouseY;
 	};

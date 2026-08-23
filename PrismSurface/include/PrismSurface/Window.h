@@ -37,6 +37,7 @@ namespace PrismSurface
 		bool Resizable = true;
 		bool DefaultTitleBar = true;
 		bool Frame = true;
+		bool WinMenu = false;
 		Theme CurrentTheme = Theme::System;
 		EventCallbackFn EventCallback = nullptr;
 	};
