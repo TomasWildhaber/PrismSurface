@@ -36,7 +36,8 @@ if (WIN32)
             "user32"
             "gdi32"
             "dwmapi"
-            "ole32"
+            "windowsapp"
+            "uxtheme"
     )
 
     target_compile_definitions("${PROJECT_NAME}"

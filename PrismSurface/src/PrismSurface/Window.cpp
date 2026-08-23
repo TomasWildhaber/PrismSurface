@@ -19,6 +19,11 @@ namespace PrismSurface
 		return m_Properties.Title;
 	}
 
+	Theme Window::GetTheme() const
+	{
+		return m_Properties.CurrentTheme;
+	}
+
 	bool Window::IsResizable() const
 	{
 		return m_Properties.Resizable;

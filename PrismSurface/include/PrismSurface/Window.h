@@ -10,6 +10,13 @@ namespace PrismSurface
 {
 	using EventCallbackFn = void(*)(Event&);
 
+	PRISM_API enum class Theme
+	{
+		Light,
+		Dark,
+		System,
+	};
+
 	PRISM_API enum class WindowState
 	{
 		Minimized,
@@ -30,6 +37,7 @@ namespace PrismSurface
 		bool Resizable = true;
 		bool DefaultTitleBar = true;
 		bool Frame = true;
+		Theme CurrentTheme = Theme::System;
 		EventCallbackFn EventCallback = nullptr;
 	};
 
@@ -41,6 +49,7 @@ namespace PrismSurface
 		uint32_t GetWidth() const;
 		uint32_t GetHeight() const;
 		std::string GetTitle() const;
+		Theme GetTheme() const;
 
 		bool IsResizable() const;
 		bool HasFrame() const;
@@ -57,6 +66,7 @@ namespace PrismSurface
 
 		virtual void Update() = 0;
 
+		virtual void SetTheme(Theme theme) = 0;
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
 		virtual void SetFullscreen() = 0;
 		virtual void Minimize() = 0;

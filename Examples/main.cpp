@@ -33,6 +33,7 @@ int main(int argc, char** argv)
 	properties.Resizable = true;
 	properties.DefaultTitleBar = false;
 	properties.Frame = true;
+	properties.CurrentTheme = PrismSurface::Theme::Dark;
 	properties.EventCallback = OnEvent;
 
 	PrismSurface::Window* window = PrismSurface::Window::Create(properties);

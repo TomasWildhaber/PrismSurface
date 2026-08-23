@@ -17,6 +17,7 @@ namespace PrismSurface
 
 		void Update() override;
 
+		virtual void SetTheme(Theme theme) override;
 		void Resize(uint32_t width, uint32_t height) override;
 		void SetFullscreen() override;
 		void Minimize() override;

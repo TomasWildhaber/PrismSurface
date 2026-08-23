@@ -6,6 +6,7 @@
 
 #include "WindowsWindow.h"
 #include "WindowsUtils.h"
+#include "WindowsTheme.h"
 
 namespace PrismSurface
 {
@@ -24,7 +25,12 @@ namespace PrismSurface
 		DWORD style = WS_OVERLAPPEDWINDOW;
 
 		if (!properties.Resizable)
-			style &= ~WS_THICKFRAME & ~WS_MAXIMIZEBOX;
+		{
+			if (!properties.Frame)
+				style = WS_POPUP;
+			else
+				style &= ~WS_THICKFRAME & ~WS_MAXIMIZEBOX;
+		}
 
 		return style;
 	}
@@ -120,7 +126,8 @@ namespace PrismSurface
 					break;
 
 				POINT cursorPos;
-				GetCursorPos(&cursorPos);
+				cursorPos.x = GET_X_LPARAM(lParam);
+				cursorPos.y = GET_Y_LPARAM(lParam);
 				ScreenToClient(hwnd, &cursorPos);
 
 				bool maximized = IsZoomed(hwnd);
@@ -164,6 +171,33 @@ namespace PrismSurface
 				}
 
 				return HTCLIENT;
+			}
+
+			case WM_SETTINGCHANGE:
+			{
+				if (lParam)
+				{
+					auto* str = reinterpret_cast<const wchar_t*>(lParam);
+					if (wcscmp(str, L"ImmersiveColorSet") == 0)
+					{
+						WindowsWindow* window = GetWindowFromHandle(hwnd);
+
+						if (window && window->GetTheme() == Theme::System)
+							window->SetTheme(Theme::System);
+					}
+				}
+
+				break;
+			}
+
+			case WM_DWMCOLORIZATIONCOLORCHANGED:
+			{
+				WindowsWindow* window = GetWindowFromHandle(hwnd);
+
+				if (window && window->GetTheme() == Theme::System)
+					window->SetTheme(Theme::System);
+
+				break;
 			}
 
 			case WM_CLOSE:
@@ -349,6 +383,8 @@ namespace PrismSurface
 
 		if (s_WindowList.empty())
 		{
+			InitDarkModeOrdinals();
+
 			WNDCLASSEXW wndClass{};
 			wndClass.cbSize = sizeof(wndClass);
 			wndClass.style = CS_HREDRAW | CS_VREDRAW;
@@ -399,6 +435,8 @@ namespace PrismSurface
 			return;
 		}
 
+		SetTheme(m_Properties.CurrentTheme);
+
 		if (m_Properties.Visible)
 			Show();
 	}
@@ -437,6 +475,41 @@ namespace PrismSurface
 
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
+		}
+	}
+
+	void WindowsWindow::SetTheme(Theme theme)
+	{
+		m_Properties.CurrentTheme = theme;
+
+		BOOL dark = FALSE;
+		switch (m_Properties.CurrentTheme)
+		{
+			case Theme::Light:  dark = FALSE; break;
+			case Theme::Dark:   dark = TRUE;  break;
+			case Theme::System: dark = !SystemUsesLightTheme(); break;
+		}
+
+		DwmSetWindowAttribute(m_WindowHandle, DWMWA_USE_IMMERSIVE_DARK_MODE, &dark, sizeof(dark));
+
+		if (SetPreferredAppMode)
+			SetPreferredAppMode(dark ? AllowDark : Default);
+		if (AllowDarkModeForWindow)
+			AllowDarkModeForWindow(m_WindowHandle, dark);
+		if (FlushMenuThemes)
+			FlushMenuThemes();
+
+		if (theme == Theme::System && SystemShowsAccentOnCaption())
+		{
+			COLORREF accent = GetSystemAccentColor();
+			DwmSetWindowAttribute(m_WindowHandle, DWMWA_BORDER_COLOR, &accent, sizeof(accent));
+			DwmSetWindowAttribute(m_WindowHandle, DWMWA_CAPTION_COLOR, &accent, sizeof(accent));
+		}
+		else
+		{
+			COLORREF defaultColor = DWMWA_COLOR_DEFAULT;
+			DwmSetWindowAttribute(m_WindowHandle, DWMWA_BORDER_COLOR, &defaultColor, sizeof(defaultColor));
+			DwmSetWindowAttribute(m_WindowHandle, DWMWA_CAPTION_COLOR, &defaultColor, sizeof(defaultColor));
 		}
 	}
 
