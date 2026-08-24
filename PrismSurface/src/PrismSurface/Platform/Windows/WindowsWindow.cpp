@@ -22,15 +22,10 @@ namespace PrismSurface
 
 	static DWORD GetStyle(const WindowProperties& properties)
 	{
-		DWORD style = WS_OVERLAPPEDWINDOW;
+		DWORD style = properties.Frame ? WS_OVERLAPPEDWINDOW : WS_POPUP;
 
 		if (!properties.Resizable)
-		{
-			if (!properties.Frame)
-				style = WS_POPUP;
-			else
 				style &= ~WS_THICKFRAME & ~WS_MAXIMIZEBOX;
-		}
 
 		return style;
 	}
@@ -116,6 +111,29 @@ namespace PrismSurface
 				break;
 			}
 
+			case WM_ERASEBKGND:
+			{
+				return TRUE;
+			}
+
+			case WM_PAINT:
+			{
+				PAINTSTRUCT ps;
+				HDC hdc = BeginPaint(hwnd, &ps);
+				RECT clientRect;
+				GetClientRect(hwnd, &clientRect);
+
+				// This is your solid client area. DWM will NOT make this transparent
+				// because it is not painted pure black (0,0,0).
+				HBRUSH hBlueBrush = CreateSolidBrush(RGB(0, 0, 255));
+				FillRect(hdc, &clientRect, hBlueBrush);
+				DeleteObject(hBlueBrush);
+
+				EndPaint(hwnd, &ps);
+
+				return 0;
+			}
+
 			case WM_NCHITTEST:
 			{
 				WindowsWindow* window = GetWindowFromHandle(hwnd);
@@ -191,7 +209,7 @@ namespace PrismSurface
 					switch (wParam)
 					{
 						case HTMINBUTTON:		ShowWindow(hwnd, SW_MINIMIZE); break;
-						case HTMAXBUTTON:		ShowWindow(hwnd, SW_MAXIMIZE); break;
+						case HTMAXBUTTON:		if (window->IsResizable()) { ShowWindow(hwnd, SW_MAXIMIZE); } break;
 						case HTCLOSE:			PostMessage(hwnd, WM_CLOSE, 0, 0); break;
 					}
 
@@ -465,7 +483,10 @@ namespace PrismSurface
 		windowRect.bottom = windowRect.top + m_Properties.Height;
 
 		DWORD style = GetStyle(m_Properties);
-		AdjustWindowRect(&windowRect, style, false);
+		AdjustWindowRect(&windowRect, style, FALSE);
+
+		if (!m_Properties.DefaultTitleBar && m_Properties.Frame)
+			windowRect.top += GetSystemMetrics(SM_CYCAPTION) + GetBorderSize().y;
 
 		std::wstring title = std::wstring(m_Properties.Title.begin(), m_Properties.Title.end());
 		m_WindowHandle = CreateWindowExW(0,
@@ -489,6 +510,13 @@ namespace PrismSurface
 		}
 
 		SetTheme(m_Properties.CurrentTheme);
+
+		switch (m_Properties.CurrentState)
+		{
+			case WindowState::Normal:			ShowWindow(m_WindowHandle, SW_RESTORE); break;
+			case WindowState::Minimized:		ShowWindow(m_WindowHandle, SW_MINIMIZE); break;
+			case WindowState::Maximized:		ShowWindow(m_WindowHandle, SW_MAXIMIZE); break;
+		}
 
 		if (m_Properties.Visible)
 			Show();
