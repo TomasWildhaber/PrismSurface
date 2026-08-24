@@ -202,6 +202,10 @@ namespace PrismSurface
 			case WM_NCLBUTTONDOWN:
 			case WM_NCLBUTTONUP:
 			{
+				bool isInButtons = wParam == HTMINBUTTON || wParam == HTMAXBUTTON || wParam == HTCLOSE;
+				if (!isInButtons)
+					break;
+
 				WindowsWindow* window = GetWindowFromHandle(hwnd);
 
 				if (!window->HasDefaultTitleBar() && msg == WM_NCLBUTTONUP)
