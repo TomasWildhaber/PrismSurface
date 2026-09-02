@@ -18,10 +18,10 @@ namespace PrismSurface
 	inline fnFlushMenuThemes FlushMenuThemes = nullptr;
 	inline fnAllowDarkModeForWindow AllowDarkModeForWindow = nullptr;
 
-	PRISM_SOURCE_API void InitDarkModeOrdinals();
+	void PRISM_SOURCE_API InitDarkModeOrdinals();
 
-	PRISM_SOURCE_API bool SystemUsesLightTheme();
-	PRISM_SOURCE_API bool SystemShowsAccentOnCaption();
-	PRISM_SOURCE_API COLORREF GetSystemAccentColor();
-	PRISM_SOURCE_API winrt::Windows::UI::Color GetAccentColorWinRT();
+	bool PRISM_SOURCE_API SystemUsesLightTheme();
+	bool PRISM_SOURCE_API SystemShowsAccentOnCaption();
+	COLORREF PRISM_SOURCE_API GetSystemAccentColor();
+	winrt::Windows::UI::Color PRISM_SOURCE_API GetAccentColorWinRT();
 }

@@ -7,7 +7,7 @@
 
 namespace PrismSurface
 {
-	PRISM_SOURCE_API class WindowsWindow : public Window
+	class PRISM_SOURCE_API WindowsWindow : public Window
 	{
 	public:
 		WindowsWindow(const WindowProperties& properties);

@@ -6,7 +6,7 @@
 
 namespace PrismSurface
 {
-	PRISM_API enum class EventType : uint8_t
+	enum class EventType : uint8_t
 	{
 		WindowClosed,
 		WindowFocused,
@@ -23,7 +23,7 @@ namespace PrismSurface
 		MouseScrolled,
 	};
 
-	PRISM_API class Event
+	class PRISM_API Event
 	{
 	public:
 		virtual ~Event() = default;
@@ -32,7 +32,7 @@ namespace PrismSurface
 		virtual const char* GetName() const = 0;
 	};
 
-	PRISM_API class WindowClosedEvent : public Event
+	class PRISM_API WindowClosedEvent : public Event
 	{
 	public:
 		WindowClosedEvent() = default;
@@ -41,7 +41,7 @@ namespace PrismSurface
 		virtual const char* GetName() const override;
 	};
 
-	PRISM_API class WindowFocusedEvent : public Event
+	class PRISM_API WindowFocusedEvent : public Event
 	{
 	public:
 		WindowFocusedEvent() = default;
@@ -50,7 +50,7 @@ namespace PrismSurface
 		virtual const char* GetName() const override;
 	};
 
-	PRISM_API class WindowLostFocusEvent : public Event
+	class PRISM_API WindowLostFocusEvent : public Event
 	{
 	public:
 		WindowLostFocusEvent() = default;
@@ -59,7 +59,7 @@ namespace PrismSurface
 		virtual const char* GetName() const override;
 	};
 
-	PRISM_API class WindowResizedEvent : public Event
+	class PRISM_API WindowResizedEvent : public Event
 	{
 	public:
 		WindowResizedEvent(uint32_t width, uint32_t height)
@@ -75,7 +75,7 @@ namespace PrismSurface
 		uint32_t m_Width, m_Height;
 	};
 
-	PRISM_API class WindowMovedEvent : public Event
+	class PRISM_API WindowMovedEvent : public Event
 	{
 	public:
 		WindowMovedEvent(uint32_t x, uint32_t y)
@@ -90,7 +90,7 @@ namespace PrismSurface
 		uint32_t m_X, m_Y;
 	};
 
-	PRISM_API class TitlebarHittestEvent : public Event
+	class PRISM_API TitlebarHittestEvent : public Event
 	{
 	public:
 		enum class HittestResult : uint8_t
@@ -116,7 +116,7 @@ namespace PrismSurface
 		float m_MouseX, m_MouseY;
 	};
 
-	PRISM_API class KeyPressedEvent : public Event
+	class PRISM_API KeyPressedEvent : public Event
 	{
 	public:
 		KeyPressedEvent(Key key)
@@ -130,7 +130,7 @@ namespace PrismSurface
 		Key m_Key;
 	};
 
-	PRISM_API class KeyReleasedEvent : public Event
+	class PRISM_API KeyReleasedEvent : public Event
 	{
 	public:
 		KeyReleasedEvent(Key key)
@@ -144,7 +144,7 @@ namespace PrismSurface
 		Key m_Key;
 	};
 
-	PRISM_API class KeyTypedEvent : public Event
+	class PRISM_API KeyTypedEvent : public Event
 	{
 	public:
 		KeyTypedEvent(Key key)
@@ -158,7 +158,7 @@ namespace PrismSurface
 		Key m_Key;
 	};
 
-	PRISM_API class MouseButtonPressedEvent : public Event
+	class PRISM_API MouseButtonPressedEvent : public Event
 	{
 	public:
 		MouseButtonPressedEvent(MouseButton button)
@@ -172,7 +172,7 @@ namespace PrismSurface
 		MouseButton m_Button;
 	};
 
-	PRISM_API class MouseButtonReleasedEvent : public Event
+	class PRISM_API MouseButtonReleasedEvent : public Event
 	{
 	public:
 		MouseButtonReleasedEvent(MouseButton button)
@@ -186,7 +186,7 @@ namespace PrismSurface
 		MouseButton m_Button;
 	};
 
-	PRISM_API class MouseMovedEvent : public Event
+	class PRISM_API MouseMovedEvent : public Event
 	{
 	public:
 		MouseMovedEvent(float x, float y)
@@ -201,7 +201,7 @@ namespace PrismSurface
 		float m_X, m_Y;
 	};
 
-	PRISM_API class MouseScrolledEvent : public Event
+	class PRISM_API MouseScrolledEvent : public Event
 	{
 	public:
 		MouseScrolledEvent(float scroll, bool horizontal)

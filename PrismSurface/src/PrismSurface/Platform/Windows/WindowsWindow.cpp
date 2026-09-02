@@ -4,8 +4,9 @@
 #include <windowsx.h>
 #include <dwmapi.h>
 
+#include "PrismSurface/Error.h"
+
 #include "WindowsWindow.h"
-#include "WindowsUtils.h"
 #include "WindowsTheme.h"
 
 namespace PrismSurface
@@ -14,11 +15,6 @@ namespace PrismSurface
 
 	static WindowList s_WindowList;
 	static const wchar_t* s_WindowClassName = L"PrismSurfaceWindowClass";
-
-	Window* Window::Create(const WindowProperties& properties)
-	{
-		return new WindowsWindow(properties);
-	}
 
 	static DWORD GetStyle(const WindowProperties& properties)
 	{
@@ -40,9 +36,47 @@ namespace PrismSurface
 		return borderSize;
 	}
 
+	static MouseButton GetButtonFromMessage(UINT msg, WPARAM wParam)
+	{
+		switch (msg)
+		{
+			case WM_LBUTTONDOWN:
+			case WM_LBUTTONUP:
+				return MouseButton::Left;
+
+			case WM_RBUTTONDOWN:
+			case WM_RBUTTONUP:
+				return MouseButton::Right;
+
+			case WM_MBUTTONDOWN:
+			case WM_MBUTTONUP:
+				return MouseButton::Middle;
+
+			case WM_XBUTTONDOWN:
+			case WM_XBUTTONUP:
+				return (GET_XBUTTON_WPARAM(wParam) == XBUTTON1)
+					? MouseButton::Button4 : MouseButton::Button5;
+			default:
+				return MouseButton::Unknown;
+		}
+	}
+
 	static WindowsWindow* GetWindowFromHandle(HWND hwnd)
 	{
 		return reinterpret_cast<WindowsWindow*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+	}
+
+	Window* Window::Create(const WindowProperties& properties)
+	{
+		WindowsWindow* window = new WindowsWindow(properties);
+
+		if (!window->GetHandle())
+		{
+			delete window;
+			return nullptr;
+		}
+
+		return window;
 	}
 
 	LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -472,7 +506,7 @@ namespace PrismSurface
 
 			if (!RegisterClassExW(&wndClass))
 			{
-				// TODO: Error handling
+				ErrorHandler::Error(ErrorCode::WindowCreationFailed, "Failed to create window!");
 				return;
 			}
 		}
@@ -509,7 +543,7 @@ namespace PrismSurface
 
 		if (!m_WindowHandle)
 		{
-			// TODO: Error handling
+			ErrorHandler::Error(ErrorCode::WindowCreationFailed, "Failed to create window!");
 			return;
 		}
 
@@ -545,7 +579,7 @@ namespace PrismSurface
 	{
 		MSG msg;
 
-		while (PeekMessage(&msg, m_WindowHandle, 0, 0, PM_REMOVE))
+		while (PeekMessageW(&msg, m_WindowHandle, 0, 0, PM_REMOVE))
 		{
 			if (msg.message == WM_QUIT)
 			{
@@ -559,7 +593,7 @@ namespace PrismSurface
 			}
 
 			TranslateMessage(&msg);
-			DispatchMessage(&msg);
+			DispatchMessageW(&msg);
 		}
 	}
 

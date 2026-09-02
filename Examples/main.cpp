@@ -1,4 +1,5 @@
 #include "PrismSurface/Window.h"
+#include "PrismSurface/Error.h"
 
 #include <iostream>
 
@@ -41,6 +42,11 @@ void OnEvent(PrismSurface::Event& event)
 
 int main(int argc, char** argv)
 {
+	PrismSurface::ErrorHandler::SetErrorCallback([](PrismSurface::ErrorCode, const char* message)
+	{
+		std::cout << message << std::endl;
+	});
+
 	PrismSurface::WindowProperties properties;
 	properties.Title = "Example Window";
 	properties.Width = 800;
@@ -53,6 +59,8 @@ int main(int argc, char** argv)
 	properties.EventCallback = OnEvent;
 
 	PrismSurface::Window* window = PrismSurface::Window::Create(properties);
+	if (!window)
+		return 1;
 
 	while (isRunning)
 	{

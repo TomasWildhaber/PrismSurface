@@ -1,6 +1,8 @@
-#include "WindowsTheme.h"
-
 #include <windows.h>
+
+#include "PrismSurface/Error.h"
+
+#include "WindowsTheme.h"
 
 namespace PrismSurface
 {
@@ -9,7 +11,7 @@ namespace PrismSurface
 		HMODULE uxtheme = LoadLibraryExW(L"uxtheme.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
 		if (!uxtheme)
 		{
-			// TODO: Error handling
+			ErrorHandler::Error(ErrorCode::ModuleLoadingFailed, "Failed to load uxtheme.dll!");
 			return;
 		}
 

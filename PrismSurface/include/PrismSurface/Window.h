@@ -8,16 +8,14 @@
 
 namespace PrismSurface
 {
-	using EventCallbackFn = void(*)(Event&);
-
-	PRISM_API enum class Theme
+	enum class Theme
 	{
 		Light,
 		Dark,
 		System,
 	};
 
-	PRISM_API enum class WindowState
+	enum class WindowState
 	{
 		Minimized,
 		Normal,
@@ -25,12 +23,14 @@ namespace PrismSurface
 		Fullscreen,
 	};
 
-	PRISM_API struct WindowProperties
+	using EventCallbackFn = void(*)(Event&);
+
+	struct PRISM_API WindowProperties
 	{
 		uint32_t Width = 1280;
 		uint32_t Height = 720;
 		std::string Title;
-		std::pair<uint32_t, uint32_t> Position = {0, 0};
+		std::pair<uint32_t, uint32_t> Position = { 0, 0 };
 		WindowState CurrentState = WindowState::Normal;
 		bool Visible = true;
 		bool Centered = false;
@@ -42,7 +42,7 @@ namespace PrismSurface
 		EventCallbackFn EventCallback = nullptr;
 	};
 
-	PRISM_API class Window
+	class PRISM_API Window
 	{
 	public:
 		virtual ~Window() = default;

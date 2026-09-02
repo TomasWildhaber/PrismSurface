@@ -6,7 +6,7 @@
 
 namespace PrismSurface
 {
-	PRISM_API enum class MouseButton : uint8_t
+	enum class MouseButton : uint8_t
 	{
 		Unknown = 0x00,
 
@@ -17,7 +17,7 @@ namespace PrismSurface
 		Button5 = 0x05,
 	};
 
-	PRISM_API enum class Key : uint16_t
+	enum class Key : uint16_t
 	{
 		Unknown = 0x00,
 
