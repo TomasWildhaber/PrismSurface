@@ -26,12 +26,24 @@ namespace PrismSurface
 		return style;
 	}
 
-	static POINT GetBorderSize()
+	static POINT GetWindowBorderSize(HWND hwnd)
 	{
 		POINT borderSize;
+		UINT dpi = GetDpiForWindow(hwnd);
 
-		borderSize.x = GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
-		borderSize.y = GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
+		borderSize.x = GetSystemMetricsForDpi(SM_CXFRAME, dpi) + GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
+		borderSize.y = GetSystemMetricsForDpi(SM_CYFRAME, dpi) + GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
+
+		return borderSize;
+	}
+	
+	static POINT GetSystemBorderSize()
+	{
+		POINT borderSize;
+		UINT dpi = GetDpiForSystem();
+
+		borderSize.x = GetSystemMetricsForDpi(SM_CXFRAME, dpi) + GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
+		borderSize.y = GetSystemMetricsForDpi(SM_CYFRAME, dpi) + GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
 
 		return borderSize;
 	}
@@ -130,7 +142,7 @@ namespace PrismSurface
 
 				if (!window->HasDefaultTitleBar())
 				{
-					POINT borderSize = GetBorderSize();
+					POINT borderSize = GetWindowBorderSize(hwnd);
 
 					NCCALCSIZE_PARAMS* params = reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam);
 					RECT* clientRect = params->rgrc;
@@ -297,6 +309,20 @@ namespace PrismSurface
 					window->SetTheme(Theme::System);
 
 				break;
+			}
+
+			case WM_DPICHANGED:
+			{
+				RECT* newRect = reinterpret_cast<RECT*>(lParam);
+
+				SetWindowPos(hwnd, nullptr,
+							 newRect->left,
+							 newRect->top,
+							 newRect->right - newRect->left,
+							 newRect->bottom - newRect->top,
+							 SWP_NOZORDER | SWP_NOACTIVATE);
+
+				return 0;
 			}
 
 			case WM_SYSCOMMAND:
@@ -509,22 +535,33 @@ namespace PrismSurface
 				ErrorHandler::Error(ErrorCode::WindowCreationFailed, "Failed to create window!");
 				return;
 			}
+
+			if (!SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2))
+				SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_SYSTEM_AWARE);
 		}
 
 		s_WindowList.push_back(this);
 
-		RECT windowRect;
+		UINT dpi = GetDpiForSystem();
 
-		windowRect.left = m_Properties.Centered ? (GetSystemMetrics(SM_CXSCREEN) - m_Properties.Width) / 2 : m_Properties.Position.first;
-		windowRect.top = m_Properties.Centered ? (GetSystemMetrics(SM_CYSCREEN) - m_Properties.Height) / 2 : m_Properties.Position.second;
-		windowRect.right = windowRect.left + m_Properties.Width;
-		windowRect.bottom = windowRect.top + m_Properties.Height;
+		// For windows 96 means default 100% scaling, so it acts as a scaling factor for the window size.
+		constexpr int scalingFactor = 96;
+
+		int scaledWidth = MulDiv(m_Properties.Width, dpi, scalingFactor);
+		int scaledHeight = MulDiv(m_Properties.Height, dpi, scalingFactor);
+
+		RECT windowRect;
+		windowRect.left = m_Properties.Centered ? (GetSystemMetricsForDpi(SM_CXSCREEN, dpi) - scaledWidth) / 2 : m_Properties.Position.first;
+		windowRect.top = m_Properties.Centered ? (GetSystemMetricsForDpi(SM_CYSCREEN, dpi) - scaledHeight) / 2 : m_Properties.Position.second;
+		windowRect.right = windowRect.left + scaledWidth;
+		windowRect.bottom = windowRect.top + scaledHeight;
 
 		DWORD style = GetStyle(m_Properties);
-		AdjustWindowRect(&windowRect, style, FALSE);
+		AdjustWindowRectExForDpi(&windowRect, style, FALSE, 0, dpi);
 
+		// Cannot use GetWindowBorderSize here, cause we don't have valid window handle yet.
 		if (!m_Properties.DefaultTitleBar && m_Properties.Frame)
-			windowRect.top += GetSystemMetrics(SM_CYCAPTION) + GetBorderSize().y;
+			windowRect.top += GetSystemMetricsForDpi(SM_CYCAPTION, dpi) + GetSystemBorderSize().y;
 
 		std::wstring title = std::wstring(m_Properties.Title.begin(), m_Properties.Title.end());
 		m_WindowHandle = CreateWindowExW(0,
