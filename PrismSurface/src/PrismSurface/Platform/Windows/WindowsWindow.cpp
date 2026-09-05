@@ -7,6 +7,7 @@
 #include "PrismSurface/Error.h"
 
 #include "WindowsWindow.h"
+#include "WindowsKeys.h"
 #include "WindowsTheme.h"
 
 namespace PrismSurface
@@ -46,31 +47,6 @@ namespace PrismSurface
 		borderSize.y = GetSystemMetricsForDpi(SM_CYFRAME, dpi) + GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
 
 		return borderSize;
-	}
-
-	static MouseButton GetButtonFromMessage(UINT msg, WPARAM wParam)
-	{
-		switch (msg)
-		{
-			case WM_LBUTTONDOWN:
-			case WM_LBUTTONUP:
-				return MouseButton::Left;
-
-			case WM_RBUTTONDOWN:
-			case WM_RBUTTONUP:
-				return MouseButton::Right;
-
-			case WM_MBUTTONDOWN:
-			case WM_MBUTTONUP:
-				return MouseButton::Middle;
-
-			case WM_XBUTTONDOWN:
-			case WM_XBUTTONUP:
-				return (GET_XBUTTON_WPARAM(wParam) == XBUTTON1)
-					? MouseButton::Button4 : MouseButton::Button5;
-			default:
-				return MouseButton::Unknown;
-		}
 	}
 
 	static WindowsWindow* GetWindowFromHandle(HWND hwnd)
@@ -407,43 +383,109 @@ namespace PrismSurface
 				return 0;
 			}
 
-			case WM_KEYDOWN:
-			{
-				WindowsWindow* window = GetWindowFromHandle(hwnd);
-				if (window && window->m_Properties.EventCallback)
-				{
-					Key key = static_cast<Key>(wParam);
-					KeyPressedEvent event(key);
-					window->m_Properties.EventCallback(event);
-				}
-
-				return 0;
-			}
-
-			case WM_KEYUP:
-			{
-				WindowsWindow* window = GetWindowFromHandle(hwnd);
-				if (window && window->m_Properties.EventCallback)
-				{
-					Key key = static_cast<Key>(wParam);
-					KeyReleasedEvent event(key);
-					window->m_Properties.EventCallback(event);
-				}
-
-				return 0;
-			}
-
 			case WM_CHAR:
 			{
 				WindowsWindow* window = GetWindowFromHandle(hwnd);
 				if (window && window->m_Properties.EventCallback)
 				{
-					Key key = static_cast<Key>(wParam);
+					Key key = GetKeyFromWinKeyCode(wParam, lParam);
 					KeyTypedEvent event(key);
 					window->m_Properties.EventCallback(event);
 				}
 
 				return 0;
+			}
+
+			case WM_SYSCHAR:
+			{
+				WindowsWindow* window = GetWindowFromHandle(hwnd);
+
+				if (!window->m_Properties.WinMenu)
+					return 0;
+
+				break;
+			}
+
+			case WM_KEYDOWN:
+			case WM_SYSKEYDOWN:
+			case WM_KEYUP:
+			case WM_SYSKEYUP:
+			{
+				WindowsWindow* window = GetWindowFromHandle(hwnd);
+
+				bool sendCallback = true;
+				bool handled = false;
+
+				Key key = GetKeyFromWinKeyCode(wParam, lParam);
+				bool isPressed = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
+				bool isRepeated = (HIWORD(lParam) & KF_REPEAT) != 0;
+
+				switch (wParam)
+				{
+					case VK_CONTROL:
+					{
+						MSG nextMsg;
+						DWORD time = GetMessageTime();
+
+						// Ignore this control message when next message is right alt
+						// Meaning key that was pressed is right alt
+						if (PeekMessage(&nextMsg, hwnd, 0, 0, PM_NOREMOVE)) {
+
+							bool isKeyEvent = (nextMsg.message == WM_KEYDOWN || nextMsg.message == WM_SYSKEYDOWN ||
+								nextMsg.message == WM_KEYUP || nextMsg.message == WM_SYSKEYUP);
+
+							bool isRightAlt = (nextMsg.wParam == VK_MENU) && ((HIWORD(nextMsg.lParam) & KF_EXTENDED) != 0);
+
+							if (isKeyEvent && isRightAlt && nextMsg.time == time)
+								sendCallback = false;
+						}
+
+						break;
+					}
+
+					case VK_F4:
+					{
+						// Control alt+f4 behavior
+						bool isAltDown = (HIWORD(lParam) & KF_ALTDOWN) != 0;
+
+						if (isAltDown)
+						{
+							if (!window->m_Properties.AltF4Close)
+							{
+								handled = true;
+							}
+							else
+							{
+								sendCallback = false;
+							}
+						}
+
+						break;
+					}
+				}
+
+				if (sendCallback && window->m_Properties.EventCallback)
+				{
+					if (isPressed)
+					{
+						if (!isRepeated)
+						{
+							KeyPressedEvent event(key);
+							window->m_Properties.EventCallback(event);
+						}
+					}
+					else
+					{
+						KeyReleasedEvent event(key);
+						window->m_Properties.EventCallback(event);
+						break;
+					}
+				}
+
+				if (handled)
+					return 0;
+				else
+					break;
 			}
 
 			case WM_LBUTTONDOWN:

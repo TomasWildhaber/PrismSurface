@@ -30,7 +30,7 @@ namespace PrismSurface
 		uint32_t Width = 1280;
 		uint32_t Height = 720;
 		std::string Title;
-		std::pair<uint32_t, uint32_t> Position = { 0, 0 };
+		std::pair<uint32_t, uint32_t> Position = { 1, 0 };
 		WindowState CurrentState = WindowState::Normal;
 		bool Visible = true;
 		bool Centered = false;
@@ -38,6 +38,7 @@ namespace PrismSurface
 		bool DefaultTitleBar = true;
 		bool Frame = true;
 		bool WinMenu = false;
+		bool AltF4Close = true;
 		Theme CurrentTheme = Theme::System;
 		EventCallbackFn EventCallback = nullptr;
 	};

@@ -13,6 +13,18 @@ void OnEvent(PrismSurface::Event& event)
 		isRunning = false;
 	}
 
+	if (event.GetType() == PrismSurface::EventType::KeyPressed)
+	{
+		PrismSurface::KeyPressedEvent& keyEvent = static_cast<PrismSurface::KeyPressedEvent&>(event);
+		std::cout << "Key Pressed: " << (uint16_t)keyEvent.GetKey() << std::endl;
+	}
+
+	if (event.GetType() == PrismSurface::EventType::KeyReleased)
+	{
+		PrismSurface::KeyReleasedEvent& keyEvent = static_cast<PrismSurface::KeyReleasedEvent&>(event);
+		std::cout << "Key Released: " << (uint16_t)keyEvent.GetKey() << std::endl;
+	}
+	
 	if (event.GetType() == PrismSurface::EventType::WindowResized)
 	{
 		PrismSurface::WindowResizedEvent& resizedEvent = static_cast<PrismSurface::WindowResizedEvent&>(event);
@@ -37,7 +49,7 @@ void OnEvent(PrismSurface::Event& event)
 		}
 	}
 
-	std::cout << event.GetName() << std::endl;
+	//std::cout << event.GetName() << std::endl;
 }
 
 int main(int argc, char** argv)
