@@ -14,6 +14,11 @@ namespace PrismSurface
 		return m_Properties.Height;
 	}
 
+	WindowPosition Window::GetPosition() const
+	{
+		return m_Properties.Position;
+	}
+
 	std::string Window::GetTitle() const
 	{
 		return m_Properties.Title;

@@ -159,8 +159,9 @@ namespace PrismSurface
 			case WM_NCHITTEST:
 			{
 				WindowsWindow* window = GetWindowFromHandle(hwnd);
-				if (!window || !window->HasFrame())
-					return HTNOWHERE;
+
+				if (!window->HasFrame())
+					return HTCLIENT;
 
 				if (window->HasDefaultTitleBar())
 					break;
@@ -371,12 +372,12 @@ namespace PrismSurface
 				if (!window)
 					return 0;
 
-				window->m_Properties.Position.first = GET_X_LPARAM(lParam);
-				window->m_Properties.Position.second = GET_Y_LPARAM(lParam);
+				window->m_Properties.Position.X = GET_X_LPARAM(lParam);
+				window->m_Properties.Position.Y = GET_Y_LPARAM(lParam);
 
 				if (window->m_Properties.EventCallback)
 				{
-					WindowMovedEvent event(window->m_Properties.Position.first, window->m_Properties.Position.second);
+					WindowMovedEvent event(window->m_Properties.Position.X, window->m_Properties.Position.Y);
 					window->m_Properties.EventCallback(event);
 				}
 
@@ -414,7 +415,7 @@ namespace PrismSurface
 				WindowsWindow* window = GetWindowFromHandle(hwnd);
 
 				bool sendCallback = true;
-				bool handled = false;
+				bool handled = true;
 
 				Key key = GetKeyFromWinKeyCode(wParam, lParam);
 				bool isPressed = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
@@ -448,16 +449,10 @@ namespace PrismSurface
 						// Control alt+f4 behavior
 						bool isAltDown = (HIWORD(lParam) & KF_ALTDOWN) != 0;
 
-						if (isAltDown)
+						if (isAltDown && window->m_Properties.AltF4Close)
 						{
-							if (!window->m_Properties.AltF4Close)
-							{
-								handled = true;
-							}
-							else
-							{
-								sendCallback = false;
-							}
+							handled = false;
+							sendCallback = false;
 						}
 
 						break;
@@ -478,7 +473,6 @@ namespace PrismSurface
 					{
 						KeyReleasedEvent event(key);
 						window->m_Properties.EventCallback(event);
-						break;
 					}
 				}
 
@@ -592,11 +586,7 @@ namespace PrismSurface
 		int scaledWidth = MulDiv(m_Properties.Width, dpi, scalingFactor);
 		int scaledHeight = MulDiv(m_Properties.Height, dpi, scalingFactor);
 
-		RECT windowRect;
-		windowRect.left = m_Properties.Centered ? (GetSystemMetricsForDpi(SM_CXSCREEN, dpi) - scaledWidth) / 2 : m_Properties.Position.first;
-		windowRect.top = m_Properties.Centered ? (GetSystemMetricsForDpi(SM_CYSCREEN, dpi) - scaledHeight) / 2 : m_Properties.Position.second;
-		windowRect.right = windowRect.left + scaledWidth;
-		windowRect.bottom = windowRect.top + scaledHeight;
+		RECT windowRect{ 0, 0, scaledWidth, scaledHeight };
 
 		DWORD style = GetStyle(m_Properties);
 		AdjustWindowRectExForDpi(&windowRect, style, FALSE, 0, dpi);
@@ -605,15 +595,35 @@ namespace PrismSurface
 		if (!m_Properties.DefaultTitleBar && m_Properties.Frame)
 			windowRect.top += GetSystemMetricsForDpi(SM_CYCAPTION, dpi) + GetSystemBorderSize().y;
 
+		int windowX = CW_USEDEFAULT;
+		int windowY = CW_USEDEFAULT;
+		int windowWidth = windowRect.right - windowRect.left;
+		int windowHeight = windowRect.bottom - windowRect.top;
+
+		bool hasPosition = m_Properties.Position != WindowPosition::AnyPosition();
+		bool isCentered = m_Properties.Position == WindowPosition::Centered();
+
+		if (isCentered)
+		{
+			windowX = (GetSystemMetricsForDpi(SM_CXSCREEN, dpi) - scaledWidth) / 2;
+			windowY = (GetSystemMetricsForDpi(SM_CYSCREEN, dpi) - scaledHeight) / 2;
+		}
+		else if (hasPosition)
+		{
+			windowX = m_Properties.Position.X;
+			windowY = m_Properties.Position.Y;
+		}
+
 		std::wstring title = std::wstring(m_Properties.Title.begin(), m_Properties.Title.end());
-		m_WindowHandle = CreateWindowExW(0,
+		m_WindowHandle = CreateWindowExW(
+			0,
 			s_WindowClassName,
 			title.c_str(),
 			style,
-			windowRect.left,
-			windowRect.top,
-			windowRect.right - windowRect.left,
-			windowRect.bottom - windowRect.top,
+			windowX,
+			windowY,
+			windowWidth,
+			windowHeight,
 			NULL,
 			NULL,
 			m_InstanceHandle,
@@ -624,6 +634,15 @@ namespace PrismSurface
 		{
 			ErrorHandler::Error(ErrorCode::WindowCreationFailed, "Failed to create window!");
 			return;
+		}
+
+		if (isCentered || !hasPosition)
+		{
+			RECT rect;
+			GetWindowRect(m_WindowHandle, &rect);
+
+			m_Properties.Position.X = rect.left;
+			m_Properties.Position.Y = rect.top;
 		}
 
 		SetTheme(m_Properties.CurrentTheme);
@@ -674,6 +693,14 @@ namespace PrismSurface
 			TranslateMessage(&msg);
 			DispatchMessageW(&msg);
 		}
+	}
+
+	void WindowsWindow::SetTitle(const std::string& title)
+	{
+		m_Properties.Title = title;
+		std::wstring wideTitle = std::wstring(title.begin(), title.end());
+
+		SetWindowTextW(m_WindowHandle, wideTitle.c_str());
 	}
 
 	void WindowsWindow::SetTheme(Theme theme)

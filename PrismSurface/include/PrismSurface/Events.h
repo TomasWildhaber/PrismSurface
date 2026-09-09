@@ -78,16 +78,16 @@ namespace PrismSurface
 	class PRISM_API WindowMovedEvent : public Event
 	{
 	public:
-		WindowMovedEvent(uint32_t x, uint32_t y)
+		WindowMovedEvent(int x, int y)
 			: m_X(x), m_Y(y) {}
 
-		uint32_t GetX() const { return m_X; }
-		uint32_t GetY() const { return m_Y; }
+		int GetX() const { return m_X; }
+		int GetY() const { return m_Y; }
 
 		virtual EventType GetType() const override;
 		virtual const char* GetName() const override;
 	private:
-		uint32_t m_X, m_Y;
+		int m_X, m_Y;
 	};
 
 	class PRISM_API TitlebarHittestEvent : public Event

@@ -63,7 +63,7 @@ int main(int argc, char** argv)
 	properties.Title = "Example Window";
 	properties.Width = 800;
 	properties.Height = 600;
-	properties.Centered = true;
+	properties.Position = PrismSurface::WindowPosition::AnyPosition();
 	properties.Resizable = true;
 	properties.DefaultTitleBar = false;
 	properties.Frame = true;

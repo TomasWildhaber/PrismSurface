@@ -25,15 +25,40 @@ namespace PrismSurface
 
 	using EventCallbackFn = void(*)(Event&);
 
+	struct WindowPosition
+	{
+		constexpr WindowPosition(int x, int y) : X(x), Y(y) {}
+
+		// Since negative value are valid positions,
+		// we use INT_MIN to represent centered position and INT_MAX to represent any position.
+
+		constexpr static WindowPosition Centered()
+		{
+			return { INT_MIN, INT_MIN };
+		}
+
+		constexpr static WindowPosition AnyPosition()
+		{
+			return { INT_MAX, INT_MAX };
+		}
+
+		constexpr bool operator==(const WindowPosition& other) const
+		{
+			return X == other.X && Y == other.Y;
+		}
+
+		int X;
+		int Y;
+	};
+
 	struct PRISM_API WindowProperties
 	{
 		uint32_t Width = 1280;
 		uint32_t Height = 720;
 		std::string Title;
-		std::pair<uint32_t, uint32_t> Position = { 1, 0 };
+		WindowPosition Position = WindowPosition::AnyPosition();
 		WindowState CurrentState = WindowState::Normal;
 		bool Visible = true;
-		bool Centered = false;
 		bool Resizable = true;
 		bool DefaultTitleBar = true;
 		bool Frame = true;
@@ -50,6 +75,7 @@ namespace PrismSurface
 
 		uint32_t GetWidth() const;
 		uint32_t GetHeight() const;
+		WindowPosition GetPosition() const;
 		std::string GetTitle() const;
 		Theme GetTheme() const;
 
@@ -68,9 +94,11 @@ namespace PrismSurface
 
 		virtual void Update() = 0;
 
+		virtual void SetTitle(const std::string& title) = 0;
 		virtual void SetTheme(Theme theme) = 0;
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
 		virtual void SetFullscreen() = 0;
+
 		virtual void Minimize() = 0;
 		virtual void Maximize() = 0;
 		virtual void Restore() = 0;
