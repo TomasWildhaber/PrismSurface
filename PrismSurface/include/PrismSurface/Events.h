@@ -14,13 +14,16 @@ namespace PrismSurface
 		WindowResized,
 		WindowMoved,
 		TitlebarHittest,
+		DragFileDropped,
 		KeyPressed,
 		KeyReleased,
 		KeyTyped,
 		MouseButtonPressed,
 		MouseButtonReleased,
-		MouseMoved,
 		MouseScrolled,
+		MouseMoved,
+		MouseEntered,
+		MouseLeft,
 	};
 
 	class PRISM_API Event
@@ -116,6 +119,27 @@ namespace PrismSurface
 		float m_MouseX, m_MouseY;
 	};
 
+	class PRISM_API DragFileDroppedEvent : public Event
+	{
+	public:
+		DragFileDroppedEvent(char** files, uint32_t fileCount, float mouseX, float mouseY)
+			: m_Files(files), m_FileCount(fileCount), m_MouseX(mouseX), m_MouseY(mouseY) {}
+
+		uint32_t GetFileCount() const { return m_FileCount; }
+		char** GetFiles() const { return m_Files; }
+
+		float GetMouseX() const { return m_MouseX; }
+		float GetMouseY() const { return m_MouseY; }
+
+		virtual EventType GetType() const override;
+		virtual const char* GetName() const override;
+	private:
+		uint32_t m_FileCount;
+		char** m_Files;
+
+		float m_MouseX, m_MouseY;
+	};
+
 	class PRISM_API KeyPressedEvent : public Event
 	{
 	public:
@@ -147,15 +171,15 @@ namespace PrismSurface
 	class PRISM_API KeyTypedEvent : public Event
 	{
 	public:
-		KeyTypedEvent(Key key)
-			: m_Key(key) {}
+		KeyTypedEvent(char32_t charCode)
+			: m_CharCode(charCode) {}
 
-		Key GetKey() const { return m_Key; }
+		uint32_t GetCharCode() const { return m_CharCode; }
 
 		virtual EventType GetType() const override;
 		virtual const char* GetName() const override;
 	private:
-		Key m_Key;
+		uint32_t m_CharCode;
 	};
 
 	class PRISM_API MouseButtonPressedEvent : public Event
@@ -186,6 +210,23 @@ namespace PrismSurface
 		MouseButton m_Button;
 	};
 
+	class PRISM_API MouseScrolledEvent : public Event
+	{
+	public:
+		MouseScrolledEvent(float scroll, bool horizontal)
+			: m_Scroll(scroll), m_Horizontal(horizontal) {
+		}
+
+		bool IsHorizontal() const { return m_Horizontal; }
+		float GetScroll() const { return m_Scroll; }
+
+		virtual EventType GetType() const override;
+		virtual const char* GetName() const override;
+	private:
+		bool m_Horizontal;
+		float m_Scroll;
+	};
+
 	class PRISM_API MouseMovedEvent : public Event
 	{
 	public:
@@ -201,19 +242,21 @@ namespace PrismSurface
 		float m_X, m_Y;
 	};
 
-	class PRISM_API MouseScrolledEvent : public Event
+	class PRISM_API MouseEnteredEvent : public Event
 	{
 	public:
-		MouseScrolledEvent(float scroll, bool horizontal)
-			: m_Scroll(scroll), m_Horizontal(horizontal) {}
-
-		bool IsHorizontal() const { return m_Horizontal; }
-		float GetScroll() const { return m_Scroll; }
+		MouseEnteredEvent() = default;
 
 		virtual EventType GetType() const override;
 		virtual const char* GetName() const override;
-	private:
-		bool m_Horizontal;
-		float m_Scroll;
+	};
+
+	class PRISM_API MouseLeftEvent : public Event
+	{
+	public:
+		MouseLeftEvent() = default;
+
+		virtual EventType GetType() const override;
+		virtual const char* GetName() const override;
 	};
 }

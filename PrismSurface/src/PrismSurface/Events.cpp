@@ -62,6 +62,16 @@ namespace PrismSurface
 		return "TitlebarHittest";
 	}
 
+	EventType DragFileDroppedEvent::GetType() const
+	{
+		return EventType::DragFileDropped;
+	}
+
+	const char* DragFileDroppedEvent::GetName() const
+	{
+		return "DragFileDropped";
+	}
+
 	EventType KeyPressedEvent::GetType() const
 	{
 		return EventType::KeyPressed;
@@ -112,6 +122,16 @@ namespace PrismSurface
 		return "MouseButtonReleased";
 	}
 
+	EventType MouseScrolledEvent::GetType() const
+	{
+		return EventType::MouseScrolled;
+	}
+
+	const char* MouseScrolledEvent::GetName() const
+	{
+		return "MouseScrolled";
+	}
+
 	EventType MouseMovedEvent::GetType() const
 	{
 		return EventType::MouseMoved;
@@ -122,13 +142,23 @@ namespace PrismSurface
 		return "MouseMoved";
 	}
 
-	EventType MouseScrolledEvent::GetType() const
+	EventType MouseEnteredEvent::GetType() const
 	{
-		return EventType::MouseScrolled;
+		return EventType::MouseEntered;
 	}
 
-	const char* MouseScrolledEvent::GetName() const
+	const char* MouseEnteredEvent::GetName() const
 	{
-		return "MouseScrolled";
+		return "MouseEntered";
+	}
+
+	EventType MouseLeftEvent::GetType() const
+	{
+		return EventType::MouseLeft;
+	}
+
+	const char* MouseLeftEvent::GetName() const
+	{
+		return "MouseLeft";
 	}
 }

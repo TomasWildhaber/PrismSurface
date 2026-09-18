@@ -23,48 +23,54 @@ namespace PrismSurface
 		Fullscreen,
 	};
 
-	using EventCallbackFn = void(*)(Event&);
+	struct PRISM_API WindowSize
+	{
+		constexpr WindowSize(uint32_t width, uint32_t height, uint32_t minWidth = 0, uint32_t minHeight = 0, uint32_t maxWidth = 0, uint32_t maxHeight = 0)
+			: Width(width), Height(height), MinWidth(minWidth), MinHeight(minHeight), MaxWidth(maxWidth), MaxHeight(maxHeight) {}
 
-	struct WindowPosition
+		constexpr bool HasMinWidth() const { return MinWidth != 0; }
+		constexpr bool HasMinHeight() const { return MinHeight != 0; }
+		constexpr bool HasMaxWidth() const { return MaxWidth != 0; }
+		constexpr bool HasMaxHeight() const { return MaxHeight != 0; }
+
+		uint32_t Width, Height;
+		uint32_t MinWidth, MinHeight;
+		uint32_t MaxWidth, MaxHeight;
+	};
+
+	struct PRISM_API WindowPosition
 	{
 		constexpr WindowPosition(int x, int y) : X(x), Y(y) {}
 
 		// Since negative value are valid positions,
 		// we use INT_MIN to represent centered position and INT_MAX to represent any position.
-
-		constexpr static WindowPosition Centered()
-		{
-			return { INT_MIN, INT_MIN };
-		}
-
-		constexpr static WindowPosition AnyPosition()
-		{
-			return { INT_MAX, INT_MAX };
-		}
+		constexpr static WindowPosition Centered() { return { INT_MIN, INT_MIN }; }
+		constexpr static WindowPosition AnyPosition() { return { INT_MAX, INT_MAX }; }
 
 		constexpr bool operator==(const WindowPosition& other) const
 		{
 			return X == other.X && Y == other.Y;
 		}
 
-		int X;
-		int Y;
+		int X, Y;
 	};
+
+	using EventCallbackFn = void(*)(Event&);
 
 	struct PRISM_API WindowProperties
 	{
-		uint32_t Width = 1280;
-		uint32_t Height = 720;
 		std::string Title;
+		WindowSize Size = { 1280, 720 };
 		WindowPosition Position = WindowPosition::AnyPosition();
 		WindowState CurrentState = WindowState::Normal;
+		Theme CurrentTheme = Theme::System;
 		bool Visible = true;
 		bool Resizable = true;
 		bool DefaultTitleBar = true;
 		bool Frame = true;
 		bool WinMenu = false;
 		bool AltF4Close = true;
-		Theme CurrentTheme = Theme::System;
+		bool DragAndDrop = true;
 		EventCallbackFn EventCallback = nullptr;
 	};
 
@@ -75,6 +81,7 @@ namespace PrismSurface
 
 		uint32_t GetWidth() const;
 		uint32_t GetHeight() const;
+		WindowSize GetSize() const;
 		WindowPosition GetPosition() const;
 		std::string GetTitle() const;
 		Theme GetTheme() const;

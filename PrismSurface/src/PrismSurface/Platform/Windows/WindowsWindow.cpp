@@ -3,6 +3,7 @@
 
 #include <windowsx.h>
 #include <dwmapi.h>
+#include <shellapi.h>
 
 #include "PrismSurface/Error.h"
 
@@ -93,6 +94,9 @@ namespace PrismSurface
 			case WM_CREATE:
 			{
 				WindowsWindow* window = GetWindowFromHandle(hwnd);
+
+				if (window->m_Properties.DragAndDrop)
+					DragAcceptFiles(hwnd, TRUE);
 
 				if (!window->HasDefaultTitleBar() || !window->HasFrame())
 				{
@@ -261,6 +265,34 @@ namespace PrismSurface
 				break;
 			}
 
+			case WM_GETMINMAXINFO:
+			{
+				// The order of messages causes WM_GETMINMAXINFO to be sent before WM_CREATE,
+				// therefore this is the only case when window can be nullptr
+				WindowsWindow* window = GetWindowFromHandle(hwnd);
+				if (!window)
+					break;
+
+				const WindowSize& windowSize = window->m_Properties.Size;
+				MINMAXINFO* mmi = reinterpret_cast<MINMAXINFO*>(lParam);
+
+				// Set the minimum size
+				if (windowSize.HasMinWidth())
+					mmi->ptMinTrackSize.x = windowSize.MinWidth;
+
+				if (windowSize.HasMinHeight())
+					mmi->ptMinTrackSize.y = windowSize.MinHeight;
+
+				// Set the maximum size
+				if (windowSize.HasMaxWidth())
+					mmi->ptMaxTrackSize.x = windowSize.MaxWidth;
+
+				if (windowSize.HasMaxHeight())
+					mmi->ptMaxTrackSize.y = windowSize.MaxHeight;
+
+				return 0;
+			}
+
 			case WM_SETTINGCHANGE:
 			{
 				if (lParam)
@@ -302,6 +334,56 @@ namespace PrismSurface
 				return 0;
 			}
 
+			case WM_DROPFILES:
+			{
+				HDROP hDrop = reinterpret_cast<HDROP>(wParam);
+
+				UINT fileCount = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
+				char** paths = new char*[fileCount];
+
+				for (UINT i = 0; i < fileCount; i++)
+				{
+					UINT nameLenght = DragQueryFileW(hDrop, i, nullptr, 0);
+
+					if (nameLenght > 0)
+					{
+						// Temp WCHAR buffer
+						WCHAR* wPath = new WCHAR[nameLenght + 1];
+						DragQueryFileW(hDrop, i, wPath, nameLenght + 1);
+
+						int utf8Size = WideCharToMultiByte(CP_UTF8, 0, wPath, -1, nullptr, 0, nullptr, nullptr);
+
+						if (utf8Size > 0)
+						{
+							paths[i] = new char[utf8Size];
+							WideCharToMultiByte(CP_UTF8, 0, wPath, -1, paths[i], utf8Size, nullptr, nullptr);
+						}
+						else
+						{
+							paths[i] = new char[1]{ '\0' };
+						}
+
+						delete[] wPath;
+					}
+				}
+
+				DragFinish(hDrop);
+
+				WindowsWindow* window = GetWindowFromHandle(hwnd);
+				if (window->m_Properties.EventCallback)
+				{
+					DragFileDroppedEvent event(paths, fileCount, static_cast<float>(GET_X_LPARAM(lParam)), static_cast<float>(GET_Y_LPARAM(lParam)));
+					window->m_Properties.EventCallback(event);
+				}
+
+				for (UINT i = 0; i < fileCount; i++)
+					delete[] paths[i];
+
+				delete[] paths;
+
+				return 0;
+			}
+
 			case WM_SYSCOMMAND:
 			{
 				WindowsWindow* window = GetWindowFromHandle(hwnd);
@@ -312,10 +394,20 @@ namespace PrismSurface
 				break;
 			}
 
+			case WM_SYSCHAR:
+			{
+				WindowsWindow* window = GetWindowFromHandle(hwnd);
+
+				if (!window->m_Properties.WinMenu)
+					return 0;
+
+				break;
+			}
+
 			case WM_CLOSE:
 			{
 				WindowsWindow* window = GetWindowFromHandle(hwnd);
-				if (window && window->m_Properties.EventCallback)
+				if (window->m_Properties.EventCallback)
 				{
 					WindowClosedEvent event;
 					window->m_Properties.EventCallback(event);
@@ -327,15 +419,13 @@ namespace PrismSurface
 			case WM_SIZE:
 			{
 				WindowsWindow* window = GetWindowFromHandle(hwnd);
-				if (!window)
-					return 0;
 
-				window->m_Properties.Width = LOWORD(lParam);
-				window->m_Properties.Height = HIWORD(lParam);
+				window->m_Properties.Size.Width = LOWORD(lParam);
+				window->m_Properties.Size.Height = HIWORD(lParam);
 
 				if (window->m_Properties.EventCallback)
 				{
-					WindowResizedEvent event(window->m_Properties.Width, window->m_Properties.Height);
+					WindowResizedEvent event(window->m_Properties.Size.Width, window->m_Properties.Size.Height);
 					window->m_Properties.EventCallback(event);
 				}
 
@@ -345,7 +435,7 @@ namespace PrismSurface
 			case WM_SETFOCUS:
 			{
 				WindowsWindow* window = GetWindowFromHandle(hwnd);
-				if (window && window->m_Properties.EventCallback)
+				if (window->m_Properties.EventCallback)
 				{
 					WindowFocusedEvent event;
 					window->m_Properties.EventCallback(event);
@@ -357,7 +447,7 @@ namespace PrismSurface
 			case WM_KILLFOCUS:
 			{
 				WindowsWindow* window = GetWindowFromHandle(hwnd);
-				if (window && window->m_Properties.EventCallback)
+				if (window->m_Properties.EventCallback)
 				{
 					WindowLostFocusEvent event;
 					window->m_Properties.EventCallback(event);
@@ -369,8 +459,6 @@ namespace PrismSurface
 			case WM_MOVE:
 			{
 				WindowsWindow* window = GetWindowFromHandle(hwnd);
-				if (!window)
-					return 0;
 
 				window->m_Properties.Position.X = GET_X_LPARAM(lParam);
 				window->m_Properties.Position.Y = GET_Y_LPARAM(lParam);
@@ -387,24 +475,30 @@ namespace PrismSurface
 			case WM_CHAR:
 			{
 				WindowsWindow* window = GetWindowFromHandle(hwnd);
-				if (window && window->m_Properties.EventCallback)
+				if (window->m_Properties.EventCallback)
 				{
-					Key key = GetKeyFromWinKeyCode(wParam, lParam);
-					KeyTypedEvent event(key);
+					uint32_t charCode = static_cast<uint32_t>(wParam);
+					KeyTypedEvent event(charCode);
 					window->m_Properties.EventCallback(event);
 				}
 
 				return 0;
 			}
 
-			case WM_SYSCHAR:
+			case WM_UNICHAR:
 			{
+				if (wParam == UNICODE_NOCHAR)
+					return TRUE;
+
 				WindowsWindow* window = GetWindowFromHandle(hwnd);
+				if (window->m_Properties.EventCallback)
+				{
+					uint32_t charCode = static_cast<uint32_t>(wParam);
+					KeyTypedEvent event(charCode);
+					window->m_Properties.EventCallback(event);
+				}
 
-				if (!window->m_Properties.WinMenu)
-					return 0;
-
-				break;
+				return 0;
 			}
 
 			case WM_KEYDOWN:
@@ -488,7 +582,7 @@ namespace PrismSurface
 			case WM_XBUTTONDOWN:
 			{
 				WindowsWindow* window = GetWindowFromHandle(hwnd);
-				if (window && window->m_Properties.EventCallback)
+				if (window->m_Properties.EventCallback)
 				{
 					MouseButton button = GetButtonFromMessage(msg, wParam);
 					MouseButtonPressedEvent event(button);
@@ -504,7 +598,7 @@ namespace PrismSurface
 			case WM_XBUTTONUP:
 			{
 				WindowsWindow* window = GetWindowFromHandle(hwnd);
-				if (window && window->m_Properties.EventCallback)
+				if (window->m_Properties.EventCallback)
 				{
 					MouseButton button = GetButtonFromMessage(msg, wParam);
 					MouseButtonReleasedEvent event(button);
@@ -517,8 +611,28 @@ namespace PrismSurface
 			case WM_MOUSEMOVE:
 			{
 				WindowsWindow* window = GetWindowFromHandle(hwnd);
-				if (window && window->m_Properties.EventCallback)
+
+				// Windows api does not have WM_MOUSEENTER message
+				// so we do it manually
+				bool wasMouseTracked = window->m_MouseTracked;
+				if (!wasMouseTracked)
 				{
+					TRACKMOUSEEVENT tme = { sizeof(TRACKMOUSEEVENT) };
+					tme.dwFlags = TME_LEAVE;
+					tme.hwndTrack = hwnd;
+					TrackMouseEvent(&tme);
+
+					window->m_MouseTracked = true;
+				}
+
+				if (window->m_Properties.EventCallback)
+				{
+					if (!wasMouseTracked)
+					{
+						MouseEnteredEvent event;
+						window->m_Properties.EventCallback(event);
+					}
+
 					float xPos = static_cast<float>(GET_X_LPARAM(lParam));
 					float yPos = static_cast<float>(GET_Y_LPARAM(lParam));
 
@@ -529,11 +643,25 @@ namespace PrismSurface
 				return 0;
 			}
 
+			case WM_MOUSELEAVE:
+			{
+				WindowsWindow* window = GetWindowFromHandle(hwnd);
+				if (window->m_Properties.EventCallback)
+				{
+					MouseLeftEvent event;
+					window->m_Properties.EventCallback(event);
+				}
+
+				window->m_MouseTracked = false;
+
+				return 0;
+			}
+
 			case WM_MOUSEWHEEL:
 			case WM_MOUSEHWHEEL:
 			{
 				WindowsWindow* window = GetWindowFromHandle(hwnd);
-				if (window && window->m_Properties.EventCallback)
+				if (window->m_Properties.EventCallback)
 				{
 					float delta = static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam)) / WHEEL_DELTA;
 					MouseScrolledEvent event(delta, msg == WM_MOUSEHWHEEL);
@@ -583,8 +711,8 @@ namespace PrismSurface
 		// For windows 96 means default 100% scaling, so it acts as a scaling factor for the window size.
 		constexpr int scalingFactor = 96;
 
-		int scaledWidth = MulDiv(m_Properties.Width, dpi, scalingFactor);
-		int scaledHeight = MulDiv(m_Properties.Height, dpi, scalingFactor);
+		int scaledWidth = MulDiv(m_Properties.Size.Width, dpi, scalingFactor);
+		int scaledHeight = MulDiv(m_Properties.Size.Height, dpi, scalingFactor);
 
 		RECT windowRect{ 0, 0, scaledWidth, scaledHeight };
 
@@ -740,8 +868,16 @@ namespace PrismSurface
 
 	void WindowsWindow::Resize(uint32_t width, uint32_t height)
 	{
-		m_Properties.Width = width;
-		m_Properties.Height = height;
+		if (!m_Properties.DefaultTitleBar && m_Properties.Frame)
+		{
+			// Adjust the size to account for window borders and title bar
+			// X borders are left and right, so we multiply by 2
+			// Y border is only the bottom, so we add it once
+			width += GetWindowBorderSize(m_WindowHandle).x * 2;
+			height += GetWindowBorderSize(m_WindowHandle).y;
+		}
+
+		SetWindowPos(m_WindowHandle, NULL, NULL, NULL, width, height, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 	}
 
 	void WindowsWindow::SetFullscreen()

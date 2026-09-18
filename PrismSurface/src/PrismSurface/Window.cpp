@@ -6,12 +6,17 @@ namespace PrismSurface
 {
 	uint32_t Window::GetWidth() const
 	{
-		return m_Properties.Width;
+		return m_Properties.Size.Width;
 	}
 
 	uint32_t Window::GetHeight() const
 	{
-		return m_Properties.Height;
+		return m_Properties.Size.Height;
+	}
+
+	WindowSize Window::GetSize() const
+	{
+		return m_Properties.Size;
 	}
 
 	WindowPosition Window::GetPosition() const

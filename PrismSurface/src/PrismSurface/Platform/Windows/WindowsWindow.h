@@ -36,5 +36,7 @@ namespace PrismSurface
 
 		HWND m_WindowHandle;
 		HINSTANCE m_InstanceHandle;
+
+		bool m_MouseTracked = false;
 	};
 }
